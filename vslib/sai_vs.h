@@ -3,6 +3,9 @@
 extern "C" {
 #include "sai.h"
 #include "saiextensions.h"
+// [cs] DTRACE for USDT probes
+//#include  <sys/sdt.h>
+
 }
 
 #include "meta/SaiInterface.h"
@@ -10,6 +13,13 @@ extern "C" {
 #include "swss/logger.h"
 
 #include <memory>
+
+// [cs] BPF probe macros
+#define USDT_PROBE_ENTER(_op,_OT,_ot) \
+    DTRACE_PROBE1(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT)
+
+#define USDT_PROBE_RET(_op,_OT,_ot) \
+    DTRACE_PROBE1(saivisor, sai_ ## _ot ## _ ## _op ## _ret, SAI_OBJECT_TYPE_ ## _OT)
 
 #define PRIVATE __attribute__((visibility("hidden")))
 
@@ -73,12 +83,15 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _In_ const sai_attribute_t *attr_list)      \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->create(                              \
+    USDT_PROBE_ENTER(create,OT,ot);                     \
+    auto rc = vs_sai->create(                           \
             (sai_object_type_t)SAI_OBJECT_TYPE_ ## OT,  \
             object_id,                                  \
             switch_id,                                  \
             attr_count,                                 \
             attr_list);                                 \
+    USDT_PROBE_RET(create,OT,ot);                       \
+    return rc;                                          \
 }
 
 #define VS_REMOVE(OT,ot)                                \
@@ -86,9 +99,12 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _In_ sai_object_id_t object_id)             \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->remove(                              \
+    USDT_PROBE_ENTER(remove,OT,ot);                     \
+    auto rc = vs_sai->remove(                           \
             (sai_object_type_t)SAI_OBJECT_TYPE_ ## OT,  \
             object_id);                                 \
+    USDT_PROBE_RET(remove,OT,ot);                       \
+    return rc;                                          \
 }
 
 #define VS_SET(OT,ot)                                   \
@@ -97,10 +113,14 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _In_ const sai_attribute_t *attr)           \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->set(                                 \
+    USDT_PROBE_ENTER(set,OT,ot);                        \
+    auto rc = vs_sai->set(                              \
             (sai_object_type_t)SAI_OBJECT_TYPE_ ## OT,  \
             object_id,                                  \
             attr);                                      \
+    USDT_PROBE_RET(set,OT,ot);                          \
+    return rc;                                          \
+
 }
 
 #define VS_GET(OT,ot)                                   \
@@ -110,11 +130,14 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _Inout_ sai_attribute_t *attr_list)         \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->get(                                 \
+    USDT_PROBE_ENTER(get,OT,ot);                        \
+    auto rc = vs_sai->get(                              \
             (sai_object_type_t)SAI_OBJECT_TYPE_ ## OT,  \
             object_id,                                  \
             attr_count,                                 \
             attr_list);                                 \
+    USDT_PROBE_RET(get,OT,ot);                          \
+    return rc;                                          \
 }
 
 // QUAD DECLARE
@@ -134,10 +157,13 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _In_ const sai_attribute_t *attr_list)      \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->create(                              \
+    USDT_PROBE_ENTER(create_entry,OT,ot);               \
+    auto rc = vs_sai->create(                           \
             entry,                                      \
             attr_count,                                 \
             attr_list);                                 \
+    USDT_PROBE_RET(create_entry,OT,ot);                 \
+    return rc;                                          \
 }
 
 #define VS_REMOVE_ENTRY(OT,ot)                          \
@@ -145,8 +171,11 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _In_ const sai_ ## ot ## _t *entry)         \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->remove(                              \
+    USDT_PROBE_ENTER(remove_entry,OT,ot);               \
+    auto rc = vs_sai->remove(                           \
             entry);                                     \
+    USDT_PROBE_RET(remove_entry,OT,ot);                 \
+    return rc;                                          \
 }
 
 #define VS_SET_ENTRY(OT,ot)                             \
@@ -155,9 +184,12 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _In_ const sai_attribute_t *attr)           \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->set(                                 \
+    USDT_PROBE_ENTER(set_entry,OT,ot);                  \
+    auto rc = vs_sai->set(                              \
             entry,                                      \
             attr);                                      \
+    USDT_PROBE_RET(set_entry,OT,ot);                    \
+    return rc;                                          \
 }
 
 #define VS_GET_ENTRY(OT,ot)                             \
@@ -167,10 +199,13 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             _Inout_ sai_attribute_t *attr_list)         \
 {                                                       \
     SWSS_LOG_ENTER();                                   \
-    return vs_sai->get(                                 \
+    USDT_PROBE_ENTER(get_entry,OT,ot);                  \
+    auto rc = vs_sai->get(                              \
             entry,                                      \
             attr_count,                                 \
             attr_list);                                 \
+    USDT_PROBE_RET(get_entry,OT,ot);                    \
+    return rc;                                          \
 }
 
 // QUAD ENTRY DECLARE
