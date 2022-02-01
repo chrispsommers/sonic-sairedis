@@ -3,10 +3,10 @@
 extern "C" {
 #include "sai.h"
 #include "saiextensions.h"
-// [cs] DTRACE for USDT probes
-//#include  <sys/sdt.h>
-
 }
+
+// [cs] DTRACE for USDT probes
+#include  <sys/sdt.h>
 
 #include "meta/SaiInterface.h"
 
@@ -120,7 +120,6 @@ PRIVATE extern std::shared_ptr<sairedis::SaiInterface>      vs_sai;
             attr);                                      \
     USDT_PROBE_RET(set,OT,ot);                          \
     return rc;                                          \
-
 }
 
 #define VS_GET(OT,ot)                                   \

@@ -287,20 +287,17 @@ sai_status_t VendorSai::create(                                             \
         _In_ const sai_ ## ot ## _t* entry,                                 \
         _In_ uint32_t attr_count,                                           \
         _In_ const sai_attribute_t *attr_list)                              \
-{
+{                                                                           \
     MUTEX();                                                                \
     SWSS_LOG_ENTER();                                                       \
     VENDOR_CHECK_API_INITIALIZED();                                         \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
-        .objectkey = { .key = { .ot = *entry } } }; 
-                                \
-    // [cs] BPF probes surround SAI API calls
-    USDT_PROBE_ENTER(create,OT,ot);                                           \
-    auto rc = info->create(&mk, 0, attr_count, attr_list);                     \
-    USDT_PROBE_RET(create,OT,ot); 
-
-    return rc;                                                                          \
+        .objectkey = { .key = { .ot = *entry } } };                         \
+    USDT_PROBE_ENTER(create,OT,ot);                                         \
+    auto rc = info->create(&mk, 0, attr_count, attr_list);                  \
+    USDT_PROBE_RET(create,OT,ot);                                           \
+    return rc;                                                              \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_CREATE_ENTRY);
@@ -315,10 +312,10 @@ sai_status_t VendorSai::remove(                                             \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
         .objectkey = { .key = { .ot = *entry } } };                         \
-        // [cs] BPF probes surround SAI API calls
-    USDT_PROBE_ENTER(remove,OT,ot);                                           \
-    auto rc = info->remove(&mk);                                               \
+    USDT_PROBE_ENTER(remove,OT,ot);                                         \
+    auto rc = info->remove(&mk);                                            \
     USDT_PROBE_RET(remove,OT,ot);                                           \
+    return rc;                                                              \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_REMOVE_ENTRY);
@@ -334,9 +331,10 @@ sai_status_t VendorSai::set(                                                \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
         .objectkey = { .key = { .ot = *entry } } };                         \
-    USDT_PROBE_ENTER(set,OT,ot);                                           \
-    auto rc = info->set(&mk, attr);                                            \
-    USDT_PROBE_RET(set,OT,ot);                                           \
+    USDT_PROBE_ENTER(set,OT,ot);                                            \
+    auto rc = info->set(&mk, attr);                                         \
+    USDT_PROBE_RET(set,OT,ot);                                              \
+    return rc;                                                              \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_SET_ENTRY);
@@ -353,9 +351,10 @@ sai_status_t VendorSai::get(                                                \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
         .objectkey = { .key = { .ot = *entry } } };                         \
-    USDT_PROBE_ENTER(get,OT,ot);                                           \
-    auto rc = info->get(&mk, attr_count, attr_list);                           \
-    USDT_PROBE_RET(get,OT,ot);                                           \
+    USDT_PROBE_ENTER(get,OT,ot);                                            \
+    auto rc = info->get(&mk, attr_count, attr_list);                        \
+    USDT_PROBE_RET(get,OT,ot);                                              \
+    return rc;                                                              \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_GET_ENTRY);

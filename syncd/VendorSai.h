@@ -3,6 +3,8 @@
 extern "C" {
 #include "sai.h"
 }
+// [cs] DTRACE for USDT probes
+#include  <sys/sdt.h>
 
 #include "meta/SaiInterface.h"
 
