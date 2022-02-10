@@ -15,6 +15,49 @@ using namespace syncd;
         SWSS_LOG_ERROR("%s: api not initialized", __PRETTY_FUNCTION__);     \
         return SAI_STATUS_FAILURE; }
 
+// BPF probe macros
+// NOTE - DTRACE supports 8 args total via DTRACE_PROBE1-DTRACE_PROBE8 macros
+// We implicitly pass the SAI OBJECT TYPE (e.g. SAI_OBJECT_TYPE_ ## _OT) as first arg, then support up to 7 add'l args for e.g. passing traced func args
+// DTRACE prior to func entry, no args
+#define USDT_PROBE_ENTER(_op,_OT,_ot) \
+    DTRACE_PROBE1(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT)
+
+// DTRACE prior to func entry, 1 arg
+#define USDT_PROBE_ENTER1(_op,_OT,_ot, _arg1) \
+    DTRACE_PROBE2(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1))
+
+// DTRACE prior to func entry, 2 args
+#define USDT_PROBE_ENTER2(_op,_OT,_ot, _arg1, _arg2) \
+    DTRACE_PROBE3(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2))
+
+// DTRACE prior to func entry, 3 args
+#define USDT_PROBE_ENTER3(_op,_OT,_ot, _arg1, _arg2, _arg3) \
+    DTRACE_PROBE4(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3))
+
+// DTRACE prior to func entry, 4 args
+#define USDT_PROBE_ENTER4(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4) \
+    DTRACE_PROBE5(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4))
+
+// DTRACE prior to func entry, 5 args
+#define USDT_PROBE_ENTER5(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4, _arg5) \
+    DTRACE_PROBE6(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4), (_arg5))
+
+// DTRACE prior to func entry, 6 args
+#define USDT_PROBE_ENTER6(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6) \
+    DTRACE_PROBE7(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4), (_arg5), (_arg6))
+
+// DTRACE prior to func entry, 7 args
+#define USDT_PROBE_ENTER7(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7) \
+    DTRACE_PROBE8(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4), (_arg5), (_arg6), (_arg7))
+
+// DTRACE prior to func return, no args
+#define USDT_PROBE_RET(_op,_OT,_ot) \
+    DTRACE_PROBE1(saivisor, sai_ ## _ot ## _ ## _op ## _ret, SAI_OBJECT_TYPE_ ## _OT)
+
+// DTRACE prior to func return, 1 arg
+#define USDT_PROBE_RET1(_op,_OT,_ot, _arg1) \
+    DTRACE_PROBE2(saivisor, sai_ ## _ot ## _ ## _op ## _ret1, SAI_OBJECT_TYPE_ ## _OT, (_arg1))
+
 VendorSai::VendorSai()
 {
     SWSS_LOG_ENTER();
@@ -287,7 +330,10 @@ sai_status_t VendorSai::create(                                             \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
         .objectkey = { .key = { .ot = *entry } } };                         \
-    return info->create(&mk, 0, attr_count, attr_list);                     \
+    USDT_PROBE_ENTER4(create,OT,ot, &mk, 0, attr_count, attr_list);         \
+    auto status = info->create(&mk, 0, attr_count, attr_list);              \
+    USDT_PROBE_RET1(create,OT,ot,status);                                   \
+    return status;                                                          \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_CREATE_ENTRY);
@@ -302,7 +348,10 @@ sai_status_t VendorSai::remove(                                             \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
         .objectkey = { .key = { .ot = *entry } } };                         \
-    return info->remove(&mk);                                               \
+    USDT_PROBE_ENTER1(remove,OT,ot, &mk);                                   \
+    auto status = info->remove(&mk);                                        \
+    USDT_PROBE_RET1(remove,OT,ot,status);                                   \
+    return status;                                                          \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_REMOVE_ENTRY);
@@ -318,7 +367,10 @@ sai_status_t VendorSai::set(                                                \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
         .objectkey = { .key = { .ot = *entry } } };                         \
-    return info->set(&mk, attr);                                            \
+    USDT_PROBE_ENTER2(set,OT,ot,&mk, attr);                                 \
+    auto status = info->set(&mk, attr);                                     \
+    USDT_PROBE_RET1(set,OT,ot,status);                                      \
+    return status;                                                          \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_SET_ENTRY);
@@ -335,7 +387,10 @@ sai_status_t VendorSai::get(                                                \
     auto info = sai_metadata_get_object_type_info(SAI_OBJECT_TYPE_ ## OT);  \
     sai_object_meta_key_t mk = { .objecttype = info->objecttype,            \
         .objectkey = { .key = { .ot = *entry } } };                         \
-    return info->get(&mk, attr_count, attr_list);                           \
+    USDT_PROBE_ENTER3(get,OT,ot, &mk, attr_count, attr_list);               \
+    auto status = info->get(&mk, attr_count, attr_list);                    \
+    USDT_PROBE_RET1(get,OT,ot,status);                                      \
+    return status;                                                          \
 }
 
 SAIREDIS_DECLARE_EVERY_ENTRY(DECLARE_GET_ENTRY);
@@ -423,8 +478,10 @@ sai_status_t VendorSai::getStats(
             SWSS_LOG_ERROR("not implemented, FIXME");
             return SAI_STATUS_FAILURE;
     }
-
-    return ptr(object_id, number_of_counters, counter_ids, counters);
+    DTRACE_PROBE5(saivisor, sai_get_stats_fn, object_type, object_id, number_of_counters, counter_ids, counters);
+    auto status = ptr(object_id, number_of_counters, counter_ids, counters);
+    DTRACE_PROBE2(saivisor, sai_get_stats_ret, (int)object_type, status);
+    return status;
 }
 
 sai_status_t VendorSai::queryStatsCapability(
@@ -520,7 +577,10 @@ sai_status_t VendorSai::getStatsExt(
             return SAI_STATUS_FAILURE;
     }
 
-    return ptr(object_id, number_of_counters, counter_ids, mode, counters);
+    DTRACE_PROBE6(saivisor, sai_get_stats_ext_fn, object_type, object_id, number_of_counters, counter_ids, mode, counters);
+    auto status = ptr(object_id, number_of_counters, counter_ids, mode, counters);
+    DTRACE_PROBE2(saivisor, sai_get_stats_ext_ret, object_type, status);
+    return status;
 }
 
 sai_status_t VendorSai::clearStats(
@@ -597,7 +657,11 @@ sai_status_t VendorSai::clearStats(
             return SAI_STATUS_FAILURE;
     }
 
-    return ptr(object_id, number_of_counters, counter_ids);
+
+    DTRACE_PROBE4(saivisor, sai_clear_stats_fn, object_type, object_id, number_of_counters, counter_ids);
+    auto status = ptr(object_id, number_of_counters, counter_ids);
+    DTRACE_PROBE2(saivisor, sai_get_stats_ret, object_type, status);
+    return status;
 }
 
 // BULK QUAD OID

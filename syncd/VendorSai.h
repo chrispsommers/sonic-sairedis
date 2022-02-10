@@ -3,6 +3,7 @@
 extern "C" {
 #include "sai.h"
 }
+#include  <sys/sdt.h> // DTRACE probing
 
 #include "meta/SaiInterface.h"
 
