@@ -18,45 +18,46 @@ using namespace syncd;
 // BPF probe macros
 // NOTE - DTRACE supports 8 args total via DTRACE_PROBE1-DTRACE_PROBE8 macros
 // We implicitly pass the SAI OBJECT TYPE (e.g. SAI_OBJECT_TYPE_ ## _OT) as first arg, then support up to 7 add'l args for e.g. passing traced func args
-// DTRACE prior to func entry, no args
+
+// DTRACE prior to func entry, 1 + no args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER(_op,_OT,_ot) \
     DTRACE_PROBE1(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT)
 
-// DTRACE prior to func entry, 1 arg
+// DTRACE prior to func entry, 1 + 1 arg (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER1(_op,_OT,_ot, _arg1) \
     DTRACE_PROBE2(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1))
 
-// DTRACE prior to func entry, 2 args
+// DTRACE prior to func entry, 1 + 2 args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER2(_op,_OT,_ot, _arg1, _arg2) \
     DTRACE_PROBE3(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2))
 
-// DTRACE prior to func entry, 3 args
+// DTRACE prior to func entry, 1 + 3 args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER3(_op,_OT,_ot, _arg1, _arg2, _arg3) \
     DTRACE_PROBE4(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3))
 
-// DTRACE prior to func entry, 4 args
+// DTRACE prior to func entry, 1 + 4 args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER4(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4) \
     DTRACE_PROBE5(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4))
 
-// DTRACE prior to func entry, 5 args
+// DTRACE prior to func entry, 1 + 5 args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER5(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4, _arg5) \
     DTRACE_PROBE6(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4), (_arg5))
 
-// DTRACE prior to func entry, 6 args
+// DTRACE prior to func entry, 1 + 6 args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER6(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6) \
     DTRACE_PROBE7(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4), (_arg5), (_arg6))
 
-// DTRACE prior to func entry, 7 args
+// DTRACE prior to func entry, 1 + 7 args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_ENTER7(_op,_OT,_ot, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7) \
     DTRACE_PROBE8(saivisor, sai_ ## _ot ## _ ## _op ## _fn, SAI_OBJECT_TYPE_ ## _OT, (_arg1), (_arg2), (_arg3), (_arg4), (_arg5), (_arg6), (_arg7))
 
-// DTRACE prior to func return, no args
+// DTRACE prior to func return, 1 + no args (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_RET(_op,_OT,_ot) \
     DTRACE_PROBE1(saivisor, sai_ ## _ot ## _ ## _op ## _ret, SAI_OBJECT_TYPE_ ## _OT)
 
-// DTRACE prior to func return, 1 arg
+// DTRACE prior to func return, 1 + 1 arg (1st arg is SAI_OBJECT_TYPE_xxx)
 #define USDT_PROBE_RET1(_op,_OT,_ot, _arg1) \
-    DTRACE_PROBE2(saivisor, sai_ ## _ot ## _ ## _op ## _ret1, SAI_OBJECT_TYPE_ ## _OT, (_arg1))
+    DTRACE_PROBE2(saivisor, sai_ ## _ot ## _ ## _op ## _ret, SAI_OBJECT_TYPE_ ## _OT, (_arg1))
 
 VendorSai::VendorSai()
 {
@@ -660,7 +661,7 @@ sai_status_t VendorSai::clearStats(
 
     DTRACE_PROBE4(saivisor, sai_clear_stats_fn, object_type, object_id, number_of_counters, counter_ids);
     auto status = ptr(object_id, number_of_counters, counter_ids);
-    DTRACE_PROBE2(saivisor, sai_get_stats_ret, object_type, status);
+    DTRACE_PROBE2(saivisor, sai_clear_stats_ret, object_type, status);
     return status;
 }
 
