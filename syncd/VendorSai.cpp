@@ -723,13 +723,26 @@ sai_status_t VendorSai::bulkCreate(
         return SAI_STATUS_NOT_SUPPORTED;
     }
 
-    return ptr(switch_id,
+    DTRACE_PROBE8(saivisor, sai_bulkCreate_fn, 
+            object_type,
+            switch_id,
             object_count,
             attr_count,
             attr_list,
             mode,
             object_id,
             object_statuses);
+
+    auto status = ptr(switch_id,
+            object_count,
+            attr_count,
+            attr_list,
+            mode,
+            object_id,
+            object_statuses);
+    
+    DTRACE_PROBE3(saivisor, sai_bulkCreate_ret, object_type, status, object_statuses); // probe can examine modified statuses
+    return status;
 }
 
 sai_status_t VendorSai::bulkRemove(
@@ -782,7 +795,15 @@ sai_status_t VendorSai::bulkRemove(
         return SAI_STATUS_NOT_SUPPORTED;
     }
 
-    return ptr(object_count, object_id, mode, object_statuses);
+    DTRACE_PROBE4(saivisor, sai_bulkRemove_fn, 
+            object_type,
+            object_id,
+            mode,
+            object_statuses);
+
+    auto status = ptr(object_count, object_id, mode, object_statuses);
+    DTRACE_PROBE3(saivisor, sai_bulkRemove_ret, object_type, status, object_statuses); // probe can examine modified statuses
+    return status;
 }
 
 sai_status_t VendorSai::bulkSet(
